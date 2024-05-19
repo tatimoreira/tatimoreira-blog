@@ -1,4 +1,4 @@
-pub const HEADER: &string = r#"<!DOCTYPE html>
+pub const HEADER: &str = r#"<!DOCTYPE html>
 <html lang="en">
 
   <head>
