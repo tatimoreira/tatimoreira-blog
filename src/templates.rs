@@ -12,7 +12,7 @@ pub fn render_body(body: &str) -> String {
     format!(
         r#"  <body>
     <nav>
-        <a href="/">Home</a>
+        <a class="bg-orange-300" href="/">Home</a>
     </nav>
     <br />
     {}

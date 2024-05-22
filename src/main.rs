@@ -1,7 +1,24 @@
-use axum::handler::HandlerWithoutStateExt;
-use axum::{http::StatusCode, response::IntoResponse, Router};
-use std::{convert::Infallible, fs, io, net::SocketAddr, path::Path, thread, time::Duration};
+use axum::Router;
+use std::{fs, net::SocketAddr, path::Path, thread, time::Duration};
+use tera::Tera;
 use tower_http::services::ServeDir;
+#[macro_use]
+extern crate lazy_static;
+extern crate tera;
+
+lazy_static! {
+    pub static ref TEMPLATES: Tera = parse_tera();
+}
+
+fn parse_tera() -> Tera {
+    match Tera::new("templates/**/*.html") {
+        Ok(tera) => tera,
+        Err(e) => {
+            println!("Parsing error(s): {}", e);
+            ::std::process::exit(1);
+        }
+    }
+}
 
 mod templates;
 const CONTENT_DIR: &str = "content";
@@ -9,7 +26,13 @@ const PUBLIC_DIR: &str = "public";
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
-    rebuild_site(CONTENT_DIR, PUBLIC_DIR);
+    let files = find_content(CONTENT_DIR);
+
+    for file in files {
+        println!("{:?}", file);
+    }
+
+    let _ = rebuild_site(CONTENT_DIR, PUBLIC_DIR);
 
     tokio::task::spawn_blocking(move || {
         println!("listenning for changes: {}", CONTENT_DIR);
@@ -37,19 +60,22 @@ async fn main() -> Result<(), anyhow::Error> {
     Ok(())
 }
 
-fn rebuild_site(content_dir: &str, output_dir: &str) -> Result<(), anyhow::Error> {
-    let _ = fs::remove_dir_all(output_dir);
-
-    let markdown_files: Vec<String> = walkdir::WalkDir::new(content_dir)
+fn find_content(content_dir: &str) -> Vec<String> {
+    walkdir::WalkDir::new(content_dir)
         .into_iter()
         .filter_map(|e| e.ok())
         .filter(|e| e.path().display().to_string().ends_with(".md"))
         .map(|e| e.path().display().to_string())
-        .collect();
+        .collect()
+}
+
+fn rebuild_site(content_dir: &str, output_dir: &str) -> Result<(), anyhow::Error> {
+    let _ = fs::remove_dir_all(output_dir);
+
+    let markdown_files: Vec<String> = find_content(content_dir);
     let mut html_files = Vec::with_capacity(markdown_files.len());
 
     for file in &markdown_files {
-        println!("ele");
         let mut html = templates::HEADER.to_owned();
         let markdown = fs::read_to_string(&file)?;
         let parser = pulldown_cmark::Parser::new_ext(&markdown, pulldown_cmark::Options::all());
@@ -94,6 +120,6 @@ fn write_index(files: Vec<String>, output_dir: &str) -> Result<(), anyhow::Error
     Ok(())
 }
 
-async fn handle_error(_err: io::Error) -> impl IntoResponse {
+/*async fn handle_error(_err: io::Error) -> impl IntoResponse {
     (StatusCode::INTERNAL_SERVER_ERROR, "Something went wrong...")
-}
+}*/
