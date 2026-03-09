@@ -20,7 +20,6 @@ fn parse_tera() -> Tera {
     }
 }
 
-mod templates;
 const CONTENT_DIR: &str = "content";
 const PUBLIC_DIR: &str = "public";
 
@@ -69,22 +68,30 @@ fn find_content(content_dir: &str) -> Vec<String> {
         .collect()
 }
 
-fn rebuild_site(content_dir: &str, output_dir: &str) -> Result<(), anyhow::Error> {
+fn generate_site(content_dir: &str, output_dir: &str) -> Result<(), anyhow::Error> {
     let _ = fs::remove_dir_all(output_dir);
 
     let markdown_files: Vec<String> = find_content(content_dir);
     let mut html_files = Vec::with_capacity(markdown_files.len());
 
     for file in &markdown_files {
-        let mut html = templates::HEADER.to_owned();
         let markdown = fs::read_to_string(&file)?;
         let parser = pulldown_cmark::Parser::new_ext(&markdown, pulldown_cmark::Options::all());
 
         let mut body = String::new();
         pulldown_cmark::html::push_html(&mut body, parser);
 
-        html.push_str(templates::render_body(&body).as_str());
-        html.push_str(templates::FOOTER);
+        let title = Path::new(&file)
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or("")
+            .to_owned();
+
+        let mut context = tera::Context::new();
+        context.insert("body", &body);
+        context.insert("title", &title);
+
+        let html = TEMPLATES.render("post.html", &context)?;
 
         let html_file = file
             .replace(content_dir, output_dir)
@@ -101,19 +108,19 @@ fn rebuild_site(content_dir: &str, output_dir: &str) -> Result<(), anyhow::Error
 }
 
 fn write_index(files: Vec<String>, output_dir: &str) -> Result<(), anyhow::Error> {
-    let mut html = templates::HEADER.to_owned();
-    let body = files
+    let posts: Vec<serde_json::Value> = files
         .into_iter()
         .map(|file| {
-            let file = file.trim_start_matches(output_dir);
-            let title = file.trim_start_matches("/").trim_end_matches(".html");
-            format!(r#"<a href="{}">{}</a>"#, file, title)
+            let file = file.trim_start_matches(output_dir).to_owned();
+            let title = file.trim_start_matches('/').trim_end_matches(".html").to_owned();
+            serde_json::json!({ "file_name": file, "title": title })
         })
-        .collect::<Vec<String>>()
-        .join("<br />\n");
+        .collect();
 
-    html.push_str(templates::render_body(&body).as_str());
-    html.push_str(templates::FOOTER);
+    let mut context = tera::Context::new();
+    context.insert("posts", &posts);
+
+    let html = TEMPLATES.render("home.html", &context)?;
 
     let index_path = Path::new(&output_dir).join("index.html");
     fs::write(index_path, html)?;

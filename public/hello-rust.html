@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     
-    <title>ssg</title>
+    <title>hello-rust</title>
     
     <link rel="stylesheet" type="text/css" href="/static/css/index.css">
 </head>
@@ -16,15 +16,23 @@
     <main class="container flex-1 w-full md:max-w-3xl mx-auto overflow-x-hidden">
         
 <div class="w-full h-full px-4 md:px-6 text-xl text-gray-800 leading-normal">
-    <h1>Developing a SSG to build my blog</h1>
-<p>My intention in developing a static site generator to build my personal blog is to document my way to learn Rust and start once and for all my writing journey.</p>
-<p>Static Side Generator
-A SGG’s are system engines that use text input files to generate static pages.
-Development:
-General idea
-The idea is to input markdow to the engine
-Having predefined templates to match that input 
-Output the HTML result</p>
+    <h1>Hello Rust</h1>
+<p>This is a test post to verify the Tera template pipeline works end to end.</p>
+<h2>Why Rust?</h2>
+<p>Rust gives you:</p>
+<ul>
+<li><strong>Memory safety</strong> without a garbage collector</li>
+<li><strong>Zero-cost abstractions</strong> — high level code, low level performance</li>
+<li><strong>Fearless concurrency</strong> — the compiler catches data races at compile time</li>
+</ul>
+<h2>A simple example</h2>
+<pre><code class="language-rust">fn main() {
+    let message = &quot;Hello, world!&quot;;
+    println!(&quot;{}&quot;, message);
+}
+</code></pre>
+<h2>Conclusion</h2>
+<p>If the template rendered this correctly, you should see proper headings, a list, and a code block above.</p>
 
 </div>
 
