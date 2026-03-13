@@ -16,3 +16,4 @@ hotwatch = "0.5"
 tera = "1"
 lazy_static = "1.4.0"
 serde_json = "1.0.149"
+async-graphql = { version = "6", features = ["chrono"] }

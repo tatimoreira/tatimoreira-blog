@@ -1,10 +1,12 @@
-use axum::Router;
+use axum::{extract::Extension, response::Html, routing::post, Json, Router};
 use std::{fs, net::SocketAddr, path::Path, thread, time::Duration};
 use tera::Tera;
 use tower_http::services::ServeDir;
 #[macro_use]
 extern crate lazy_static;
 extern crate tera;
+
+mod graphql;
 
 lazy_static! {
     pub static ref TEMPLATES: Tera = parse_tera();
@@ -31,7 +33,7 @@ async fn main() -> Result<(), anyhow::Error> {
         println!("{:?}", file);
     }
 
-    let _ = rebuild_site(CONTENT_DIR, PUBLIC_DIR);
+    let _ = generate_site(CONTENT_DIR, PUBLIC_DIR);
 
     tokio::task::spawn_blocking(move || {
         println!("listenning for changes: {}", CONTENT_DIR);
@@ -39,7 +41,7 @@ async fn main() -> Result<(), anyhow::Error> {
         hotwatch
             .watch(CONTENT_DIR, |_| {
                 println!("Rebuilding site");
-                rebuild_site(CONTENT_DIR, PUBLIC_DIR).expect("Rebuilding site");
+                generate_site(CONTENT_DIR, PUBLIC_DIR).expect("Rebuilding site");
             })
             .expect("failed to watch content folder!");
         loop {
@@ -47,16 +49,40 @@ async fn main() -> Result<(), anyhow::Error> {
         }
     });
 
-    let app = Router::new().nest_service("/", ServeDir::new(PUBLIC_DIR));
-    let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
-    println!("serving site on {}", addr);
+    let schema = graphql::build_schema();
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    let app = Router::new()
+        .route("/graphql", post(graphql_handler).get(graphiql_handler))
+        .layer(Extension(schema))
+        .nest_service("/", ServeDir::new(PUBLIC_DIR));
+
+    let port: u16 = std::env::var("PORT")
+        .unwrap_or_else(|_| "3001".into())
+        .parse()
+        .unwrap_or(3001);
+    let addr = SocketAddr::from(([0, 0, 0, 0], port));
+    println!("serving site on {}", addr);
+    println!("graphql endpoint: http://{}/graphql", addr);
+
+    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
     axum::serve(listener, app.into_make_service())
         .await
         .unwrap();
 
     Ok(())
+}
+
+async fn graphiql_handler() -> Html<String> {
+    Html(async_graphql::http::playground_source(
+        async_graphql::http::GraphQLPlaygroundConfig::new("/graphql"),
+    ))
+}
+
+async fn graphql_handler(
+    Extension(schema): Extension<graphql::BlogSchema>,
+    Json(req): Json<async_graphql::Request>,
+) -> Json<async_graphql::Response> {
+    Json(schema.execute(req).await)
 }
 
 fn find_content(content_dir: &str) -> Vec<String> {

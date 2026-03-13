@@ -16,15 +16,22 @@
     <main class="container flex-1 w-full md:max-w-3xl mx-auto overflow-x-hidden">
         
 <div class="w-full h-full px-4 md:px-6 text-xl text-gray-800 leading-normal">
-    <h1>Developing a SSG to build my blog</h1>
+    <h1>Building a SSG in Rust for my personal blog</h1>
 <p>My intention in developing a static site generator to build my personal blog is to document my way to learn Rust and start once and for all my writing journey.</p>
-<p>Static Side Generator
-A SGG’s are system engines that use text input files to generate static pages.
-Development:
-General idea
-The idea is to input markdow to the engine
-Having predefined templates to match that input 
-Output the HTML result</p>
+<h2>Static Side Generator</h2>
+<p>A SGG’s are system engines that use text input files to generate static pages.</p>
+<h2>Development:</h2>
+<h3>General idea</h3>
+<ul>
+<li>Input markdonw to the engine</li>
+<li>Having predefined templates to match that input </li>
+<li>Output the HTML result</li>
+<li>Generate a graphql enpoint to serve the generated pages/posts to a client</li>
+<li>Consume the graphql enpoints into a Remix client (my personal web page)</li>
+<li>Render the list of posts and the post details</li>
+</ul>
+<p>I decided to use <a href="https://docs.rs/tera/latest/tera/">Tera</a> as template engine. I have a base template and a post template which extends from base and builds the post from a content folder which contains md files.
+I also added a graphql handler using <a href="https://docs.rs/async-graphql/latest/async_graphql/">async_graphql</a> so in this way I can consume them and use them in my Remix portfolio as the client.</p>
 
 </div>
 
