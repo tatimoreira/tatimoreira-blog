@@ -1,19 +1,21 @@
 [package]
-name = "rust_static_site_generator"
+name = "tatimoreira-blog"
 version = "0.1.0"
-edition = "2018"
+edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[[bin]]
+name = "ssg"
+path = "src/main.rs"
+
+[[bin]]
+name = "graphql"
+path = "api/ssg.rs"
 
 [dependencies]
-walkdir = "2"
-anyhow = "1"
-pulldown-cmark = "0.8.0"
-axum = "0.7.5"
-tokio = { version = "1", features = ["full"] }
-tower-http = { version = "0.5", features = ["fs"] }
-hotwatch = "0.5"
-tera = "1"
-lazy_static = "1.4.0"
-serde_json = "1.0.149"
+vercel_runtime = "1"
 async-graphql = { version = "6", features = ["chrono"] }
+pulldown-cmark = "0.8.0"
+walkdir = "2"
+tokio = { version = "1", features = ["full"] }
+serde_json = "1"
+anyhow = "1"

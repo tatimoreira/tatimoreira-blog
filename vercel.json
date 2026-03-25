@@ -1,0 +1,11 @@
+{
+  "framework": null,
+  "buildCommand": "",
+  "outputDirectory": "public",
+  "functions": {
+    "api/graphql.rs": {
+      "runtime": "vercel-rust@4.0.0",
+      "includeFiles": "content/**"
+    }
+  }
+}
